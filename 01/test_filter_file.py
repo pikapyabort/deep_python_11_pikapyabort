@@ -57,3 +57,27 @@ def test_file_path(tmp_path):
     stop_words = ["азора"]
     results = list(filter_lines(str(test_file), search_words, stop_words))
     assert results == ["Роза"]
+
+
+def test_single_char_search_stop():
+    text_data = """u f c
+U F C
+ufc
+"""
+    file_like = io.StringIO(text_data)
+    search_words = ["u"]
+    stop_words = ["f"]
+    results = list(filter_lines(file_like, search_words, stop_words))
+    assert not results
+
+
+def test_no_search_words():
+    text_data = """u f c
+U F C
+ufc
+"""
+    file_like = io.StringIO(text_data)
+    search_words = []
+    stop_words = ["ufc"]
+    results = list(filter_lines(file_like, search_words, stop_words))
+    assert not results
