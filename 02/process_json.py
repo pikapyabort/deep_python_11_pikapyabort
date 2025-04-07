@@ -20,6 +20,7 @@ def process_json(
     for req_key in required_keys:
         if req_key in data:
             value = data[req_key]
+            value_lower = value.lower()
             for token in tokens:
-                if token.lower() in value.lower():
+                if token.lower() in value_lower:
                     callback(req_key, token)

@@ -85,7 +85,12 @@ def test_check_str_retry_3_attempts(capfd):
     lines = captured.out.strip().split("\n")
     assert len(lines) == 3
     for i, line in enumerate(lines, start=1):
-        assert f'attempt = {i}, exception = ValueError' in line
+        expected_line = (
+            'run "check_str" with positional args = (), '
+            "keyword kwargs = {'value': None}, "
+            f"attempt = {i}, exception = ValueError"
+        )
+        assert line == expected_line
 
 
 def test_check_int_success(capfd):
@@ -118,7 +123,11 @@ def test_check_int_expected_exception(capfd):
     captured = capfd.readouterr()
     lines = captured.out.strip().split("\n")
     assert len(lines) == 1
-    assert 'attempt = 1, exception = ValueError' in lines[0]
+    assert (
+        'run "check_int" with positional args = (), '
+        "keyword kwargs = {'value': None}, "
+        "attempt = 1, exception = ValueError"
+    ) in lines[0]
 
 
 def test_no_retries(capfd):
@@ -132,7 +141,11 @@ def test_no_retries(capfd):
     captured = capfd.readouterr()
     lines = captured.out.strip().split("\n")
     assert len(lines) == 1
-    assert "attempt = 1, exception = RuntimeError" in lines[0]
+    assert (
+        'run "fail_once" with positional args = (), '
+        'keyword kwargs = {}, '
+        'attempt = 1, exception = RuntimeError'
+    ) in lines[0]
 
 
 def test_retry_success_after_failure(capfd):
@@ -151,5 +164,13 @@ def test_retry_success_after_failure(capfd):
     captured = capfd.readouterr()
     lines = captured.out.strip().split("\n")
     assert len(lines) == 2
-    assert "attempt = 1, exception = RuntimeError" in lines[0]
-    assert "attempt = 2, result = OK" in lines[1]
+    assert (
+        'run "sometimes_fail" with positional args = (), '
+        'keyword kwargs = {}, '
+        'attempt = 1, exception = RuntimeError'
+    ) in lines[0]
+    assert (
+        'run "sometimes_fail" with positional args = (), '
+        'keyword kwargs = {}, '
+        'attempt = 2, result = OK'
+    ) in lines[1]
