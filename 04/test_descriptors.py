@@ -9,21 +9,24 @@ def test_data_valid():
     assert d.price == 100
 
 
-def test_data_invalid_num_type():
-    with pytest.raises(TypeError):
-        Data(num="forty two", name="Test", price=10)
-
-
-def test_data_invalid_name_type():
-    with pytest.raises(TypeError):
-        Data(num=1, name=123, price=10)
-
-
-def test_data_invalid_price_value():
-    with pytest.raises(ValueError):
-        Data(num=1, name="Name", price=0)
-    with pytest.raises(ValueError):
-        Data(num=1, name="Name", price=-1)
+@pytest.mark.parametrize(
+    "kwargs, exc_cls",
+    [
+        ({"num": "forty two", "name": "Test", "price": 10}, TypeError),
+        ({"num": 1, "name": 123, "price": 10}, TypeError),
+        ({"num": 1, "name": "Name", "price": 0}, ValueError),
+        ({"num": 1, "name": "Name", "price": -1}, ValueError),
+    ],
+    ids=[
+        "num-wrong-type",
+        "name-wrong-type",
+        "price-non-positive-zero",
+        "price-non-positive-negative",
+    ],
+)
+def test_data_invalid_creation(kwargs, exc_cls):
+    with pytest.raises(exc_cls):
+        Data(**kwargs)
 
 
 def test_reassignment_valid():
@@ -36,14 +39,21 @@ def test_reassignment_valid():
     assert d.price == 5
 
 
-def test_reassignment_invalid():
-    d = Data(num=10, name="Ok", price=10)
-    with pytest.raises(TypeError):
-        d.num = "str"
-    with pytest.raises(TypeError):
-        d.name = 1234
-    with pytest.raises(ValueError):
-        d.price = 0
+@pytest.mark.parametrize(
+    "field, bad_value, exc_cls",
+    [
+        ("num", "str", TypeError),
+        ("name", 1234, TypeError),
+        ("price", 0, ValueError),
+    ],
+    ids=["num-bad", "name-bad", "price-bad"],
+)
+def test_reassignment_invalid_does_not_mutate(field, bad_value, exc_cls):
+    original = Data(num=10, name="Ok", price=10)
+    old_val = getattr(original, field)
+    with pytest.raises(exc_cls):
+        setattr(original, field, bad_value)
+    assert getattr(original, field) == old_val
 
 
 def test_deletion_forbidden():
@@ -65,3 +75,14 @@ def test_descriptor_get_via_class():
 def test_data_repr():
     d = Data(1, "test", 10)
     assert repr(d) == "Data(num=1, name='test', price=10)"
+
+
+def test_instance_independence():
+    first = Data(num=1, name="one", price=10)
+    second = Data(num=2, name="two", price=20)
+    assert (first.num, first.name, first.price) == (1, "one", 10)
+    second.num = 200
+    second.name = "changed"
+    second.price = 300
+    assert (first.num, first.name, first.price) == (1, "one", 10)
+    assert (second.num, second.name, second.price) == (200, "changed", 300)
