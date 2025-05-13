@@ -10,12 +10,12 @@ def test_data_valid():
 
 
 @pytest.mark.parametrize(
-    "kwargs, exc_cls",
+    "kwargs, exc_cls, field",
     [
-        ({"num": "forty two", "name": "Test", "price": 10}, TypeError),
-        ({"num": 1, "name": 123, "price": 10}, TypeError),
-        ({"num": 1, "name": "Name", "price": 0}, ValueError),
-        ({"num": 1, "name": "Name", "price": -1}, ValueError),
+        ({"num": "forty two", "name": "Test", "price": 10}, TypeError, "num"),
+        ({"num": 1, "name": 123, "price": 10}, TypeError, "name"),
+        ({"num": 1, "name": "Name", "price": 0}, ValueError, "price"),
+        ({"num": 1, "name": "Name", "price": -1}, ValueError, "price"),
     ],
     ids=[
         "num-wrong-type",
@@ -24,9 +24,10 @@ def test_data_valid():
         "price-non-positive-negative",
     ],
 )
-def test_data_invalid_creation(kwargs, exc_cls):
-    with pytest.raises(exc_cls):
+def test_data_invalid_creation(kwargs, exc_cls, field):
+    with pytest.raises(exc_cls) as exc:
         Data(**kwargs)
+    assert field in str(exc.value)
 
 
 def test_reassignment_valid():
@@ -51,8 +52,9 @@ def test_reassignment_valid():
 def test_reassignment_invalid_does_not_mutate(field, bad_value, exc_cls):
     original = Data(num=10, name="Ok", price=10)
     old_val = getattr(original, field)
-    with pytest.raises(exc_cls):
+    with pytest.raises(exc_cls) as exc:
         setattr(original, field, bad_value)
+    assert field in str(exc.value)
     assert getattr(original, field) == old_val
 
 

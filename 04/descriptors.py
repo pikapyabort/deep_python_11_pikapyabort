@@ -16,7 +16,10 @@ class BaseDescriptor(ABC):
         return instance.__dict__.get(self._attr_name, None)
 
     def __set__(self, instance, value):
-        self.validate(value)
+        try:
+            self.validate(value)
+        except (TypeError, ValueError) as exc:
+            raise exc.__class__(f"Поле '{self._attr_name}': {exc}") from None
         instance.__dict__[self._attr_name] = value
 
     def __delete__(self, instance):
