@@ -57,13 +57,13 @@ class LRUCache:
             x.value = value
             self._move_front(x)
             return
-        x = DoublyLinkedList(key, value)
-        self._map[key] = x
-        self._add_front(x)
-        if len(self._map) > self._capacity:
+        if len(self._map) >= self._capacity:
             tail = self._tail
             self._unlink(tail)
             del self._map[tail.key]
+        x = DoublyLinkedList(key, value)
+        self._map[key] = x
+        self._add_front(x)
 
     def __getitem__(self, key):
         x = self._map[key]
