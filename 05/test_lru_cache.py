@@ -62,3 +62,24 @@ def test_move_front_hits_x_next_branch():
         c.set(k, k)
     assert c.get("b") == "b"
     assert repr(c).startswith("LRUCache([b:")
+
+
+def test_capacity_one_eviction():
+    cache = LRUCache(1)
+    cache.set("first", 1)
+    cache.set("second", 2)
+    assert cache.get("first") is None
+    assert cache.get("second") == 2
+    assert len(cache) == 1
+
+
+def test_update_then_insert_eviction():
+    cache = LRUCache(2)
+    cache.set("a", 1)
+    cache.set("b", 2)
+    cache.set("a", 10)
+    cache.set("c", 3)
+    assert cache.get("b") is None
+    assert cache.get("a") == 10
+    assert cache.get("c") == 3
+    assert len(cache) == 2
