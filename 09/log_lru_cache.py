@@ -1,4 +1,5 @@
 # pylint: disable=too-few-public-methods
+# pylint: disable=duplicate-code
 from __future__ import annotations
 import argparse
 import logging
