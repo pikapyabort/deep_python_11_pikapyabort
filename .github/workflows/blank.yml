@@ -8,38 +8,54 @@ on:
   workflow_dispatch:
 
 jobs:
-  validate_homeworks:
-    name: Validate all homeworks
+  detect-and-validate:
     runs-on: ubuntu-latest
+    outputs:
+      dirs: ${{ steps.detect.outputs.dirs }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect HW folders
+        id: detect
+        run: |
+          hw_dirs=$(git ls-files '*/test_*.py' | cut -d/ -f1 | sort -u | tr '\n' ' ')
+          echo "dirs=$hw_dirs" >> $GITHUB_OUTPUT
+
+  validate:
+    needs: detect-and-validate
+    if: needs.detect-and-validate.outputs.dirs != ''
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        hw: ${{ fromJson('["' + needs.detect-and-validate.outputs.dirs + '"]') }}
+    name: Validate ${{ matrix.hw }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5.2.0
+      - uses: actions/setup-python@v5.2.0
         with:
           python-version: '3.13'
           cache: 'pip'
 
-      - name: Install dependencies and build extension
+      - name: Install dependencies & build extension
+        working-directory: ${{ matrix.hw }}
         run: |
-          pip install -r requirements.txt
-          pip install -e .
+          pip install -r ../requirements.txt
+          if [ -f setup.py ] || [ -f pyproject.toml ]; then
+            pip install -e .
+          fi
 
       - name: Check flake8
-        run: |
-          flake8 .
+        working-directory: ${{ matrix.hw }}
+        run: flake8 .
 
       - name: Check pylint
-        if: ${{ always() }}
-        run: |
-          pylint setup.py test_correct.py test_perf.py
+        working-directory: ${{ matrix.hw }}
+        run: pylint $(git ls-files '*.py')
 
-      - name: Check tests with pytest
-        if: ${{ always() }}
+      - name: Run pytest + coverage
+        working-directory: ${{ matrix.hw }}
         run: |
           coverage run -m pytest .
-
-      - name: Check test coverage
-        run: |
           coverage report -m
