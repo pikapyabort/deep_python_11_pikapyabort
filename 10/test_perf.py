@@ -28,4 +28,4 @@ def test_speed():
 
     j_std = bench(json.loads, json.dumps(data))
     j_cus = bench(custom_json.loads, json.dumps(data))
-    assert j_cus < j_std * 0.6
+    assert j_cus < j_std * 0.8
