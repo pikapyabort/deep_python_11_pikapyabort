@@ -21,14 +21,16 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
+          pip install -e .
 
       - name: Check flake8
         run: flake8 .
 
       - name: Check pylint
         if: ${{ always() }}
-        run: pylint ./*/*.py
+        run: pylint setup.py test_correct.py test_perf.py
 
       - name: Check tests with pytest
         if: ${{ always() }}
