@@ -5,57 +5,34 @@ on:
     branches: [ "main", "test" ]
   pull_request:
     branches: [ "main" ]
+
   workflow_dispatch:
 
 jobs:
-  detect-and-validate:
+  validate_homeworks:
+    name: Validate all homeworks
     runs-on: ubuntu-latest
-    outputs:
-      dirs: ${{ steps.detect.outputs.dirs }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Detect HW folders
-        id: detect
-        run: |
-          hw_dirs=$(git ls-files '*/test_*.py' | cut -d/ -f1 | sort -u | tr '\n' ' ')
-          echo "dirs=$hw_dirs" >> $GITHUB_OUTPUT
-
-  validate:
-    needs: detect-and-validate
-    if: needs.detect-and-validate.outputs.dirs != ''
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        hw: ${{ fromJson('["' + needs.detect-and-validate.outputs.dirs + '"]') }}
-    name: Validate ${{ matrix.hw }}
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5.2.0
         with:
           python-version: '3.13'
           cache: 'pip'
 
-      - name: Install dependencies & build extension
-        working-directory: ${{ matrix.hw }}
-        run: |
-          pip install -r ../requirements.txt
-          if [ -f setup.py ] || [ -f pyproject.toml ]; then
-            pip install -e .
-          fi
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
       - name: Check flake8
-        working-directory: ${{ matrix.hw }}
         run: flake8 .
 
       - name: Check pylint
-        working-directory: ${{ matrix.hw }}
-        run: pylint $(git ls-files '*.py')
+        if: ${{ always() }}
+        run: pylint ./*/*.py
 
-      - name: Run pytest + coverage
-        working-directory: ${{ matrix.hw }}
-        run: |
-          coverage run -m pytest .
-          coverage report -m
+      - name: Check tests with pytest
+        if: ${{ always() }}
+        run: coverage run -m pytest .
+
+      - name: Check test coverage
+        run: coverage report -m
