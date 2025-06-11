@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          pip install -e .
+          pip install -e ./10.
 
       - name: Check flake8
         run: flake8 .
